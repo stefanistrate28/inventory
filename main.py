@@ -1,16 +1,16 @@
 from fastapi import FastAPI
 from app.db.database import Base, engine
 from app.api.routes import warehouses, suppliers, products, inventory
-from app.db.seed import seed_data
+from fastapi.staticfiles import StaticFiles
 
 # cream aplicatia
-app = FastAPI(title="Inventory Management API")
+app = FastAPI(title="The Inventory Proiect")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # cream tabelele in baza de date
 Base.metadata.create_all(bind=engine)
 
-# adaugam date de test
-seed_data()
+
 
 # adaugam routes
 app.include_router(warehouses.router, prefix="/api/warehouses", tags=["Warehouses"])
