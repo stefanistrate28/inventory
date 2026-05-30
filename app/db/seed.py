@@ -6,7 +6,7 @@ from app.models.product import Product
 def seed_data():
     db = SessionLocal()
 
-    # daca exista deja date nu mai adaugam
+    
     exista_date = db.query(Warehouse).first()
     if exista_date:
         print("Datele exista deja in baza de date, nu mai adaugam nimic")
@@ -15,9 +15,6 @@ def seed_data():
 
     print("Adaugam date in baza de date...")
 
-    # ----------------------------
-    # CREAM WAREHOUSE-URILE
-    # ----------------------------
 
     depozit1 = Warehouse(
         name="Depozit Cluj",
@@ -42,16 +39,12 @@ def seed_data():
     db.add(depozit3)
     db.commit()
 
-    # facem refresh ca sa primim id-urile din baza de date
     db.refresh(depozit1)
     db.refresh(depozit2)
     db.refresh(depozit3)
 
     print("Warehouse-urile au fost adaugate!")
 
-    # ----------------------------
-    # CREAM SUPPLIER-II
-    # ----------------------------
 
     supplier1 = Supplier(
         name="Samsung Romania",
@@ -85,11 +78,7 @@ def seed_data():
 
     print("Supplier-ii au fost adaugati!")
 
-    # ----------------------------
-    # CREAM PRODUSELE
-    # ----------------------------
 
-    # produse in depozit1 (Cluj)
     produs1 = Product(
         name="Samsung Galaxy S24",
         sku="SAM-S24-BLK",
@@ -120,7 +109,7 @@ def seed_data():
         supplier_id=supplier2.id
     )
 
-    # produse in depozit2 (Bucuresti)
+
     produs4 = Product(
         name="iPhone 15 Pro",
         sku="APL-IP15P-BLK",
@@ -151,7 +140,6 @@ def seed_data():
         supplier_id=supplier1.id
     )
 
-    # produse in depozit3 (Timisoara)
     produs7 = Product(
         name="LG Monitor 27 inch",
         sku="LG-MON27-BLK",
