@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - Stefan Istrate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #222536;
+            --border: #2e3247;
+            --accent: #6366f1;
+            --accent2: #22d3ee;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f97316;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --text3: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+        nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+        .nav-logo { font-family: 'Space Mono', monospace; font-size: 16px; color: var(--accent2); }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-btn { background: none; border: none; color: var(--text2); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; transition: all 0.2s; }
+        .nav-btn:hover { background: var(--surface2); color: var(--text); }
+        .nav-btn.active { background: var(--accent); color: white; }
+        .nav-swagger { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; text-decoration: none; transition: all 0.2s; }
+        .nav-swagger:hover { border-color: var(--accent); color: var(--accent); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .section-header { margin-bottom: 1.5rem; }
+        .section-header h2 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+        .section-header p { color: var(--text3); font-size: 14px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+        .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+        .form-group select option { background: var(--surface2); }
+        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-green { background: var(--green); color: white; }
+        .btn-green:hover { background: #16a34a; }
+        .btn-red { background: var(--red); color: white; }
+        .btn-red:hover { background: #dc2626; }
+        .btn-orange { background: var(--orange); color: white; }
+        .btn-orange:hover { background: #ea6c00; }
+        .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+        .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .items-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+        .item-row { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .item-info { flex: 1; min-width: 0; }
+        .item-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+        .item-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+        .badge { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-blue { background: rgba(99,102,241,0.2); color: var(--accent); }
+        .badge-green { background: rgba(34,197,94,0.2); color: var(--green); }
+        .response-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text2); max-height: 180px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin-top: 12px; }
+        .response-box.success { border-color: var(--green); color: var(--green); }
+        .response-box.error { border-color: var(--red); color: var(--red); }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 14px; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--green); }
+        .toast.error { border-color: var(--red); }
+        .empty-state { text-align: center; padding: 2rem; color: var(--text3); font-size: 14px; }
+        .stock-badge { font-family: 'Space Mono', monospace; font-size: 12px; padding: 3px 8px; border-radius: 6px; background: rgba(34,211,238,0.1); color: var(--accent2); border: 1px solid rgba(34,211,238,0.2); }
+        .hero { background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; }
+        .hero h1 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+        .hero p { color: var(--text2); font-size: 14px; margin-bottom: 1rem; }
+        .hero-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .stat { display: flex; flex-direction: column; }
+        .stat-value { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent2); }
+        .stat-label { font-size: 12px; color: var(--text3); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 480px; transform: scale(0.95); transition: transform 0.2s; }
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-title { font-size: 16px; font-weight: 600; }
+        .modal-close { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 20px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">📦 inventory.app</div>
+    <div class="nav-links">
+        <button class="nav-btn active" onclick="showSection('dashboard', this)">Dashboard</button>
+        <button class="nav-btn" onclick="showSection('warehouses', this)">Depozite</button>
+        <button class="nav-btn" onclick="showSection('suppliers', this)">Furnizori</button>
+        <button class="nav-btn" onclick="showSection('products', this)">Produse</button>
+        <button class="nav-btn" onclick="showSection('inventory', this)">Stocuri</button>
+    </div>
+    <a href="/docs" class="nav-swagger" target="_blank">Swagger UI ↗</a>
+</nav>
+
+<div class="container">
+
+    <!-- DASHBOARD -->
+    <div id="section-dashboard" class="section active">
+        <div class="hero">
+            <h1>Inventory Management API</h1>
+            <p>Stefan Istrate · Anul 1 · Facultate de Calculatoare</p>
+            <div class="hero-stats">
+                <div class="stat"><span class="stat-value" id="stat-warehouses">-</span><span class="stat-label">Depozite</span></div>
+                <div class="stat"><span class="stat-value" id="stat-suppliers">-</span><span class="stat-label">Furnizori</span></div>
+                <div class="stat"><span class="stat-value" id="stat-products">-</span><span class="stat-label">Produse</span></div>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">🏭 Depozite</div>
+                <div id="dashboard-warehouses" class="items-list"><div class="empty-state">Se incarca...</div></div>
+            </div>
+            <div class="card">
+                <div class="card-title">🤝 Furnizori</div>
+                <div id="dashboard-suppliers" class="items-list"><div class="empty-state">Se incarca...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEPOZITE -->
+    <div id="section-warehouses" class="section">
+        <div class="section-header"><h2>🏭 Depozite</h2><p>Gestioneaza depozitele din sistem</p></div>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">+ Adauga depozit nou</div>
+                <div class="form-group"><label>Nume *</label><input type="text" id="w-name" placeholder="ex: Depozit Cluj"></div>
+                <div class="form-group"><label>Locatie</label><input type="text" id="w-location" placeholder="ex: Cluj-Napoca, Str. Fabricii"></div>
+                <div class="form-group"><label>Descriere</label><input type="text" id="w-desc" placeholder="ex: Depozit principal"></div>
+                <button class="btn btn-green" onclick="createWarehouse()">➕ Creaza depozit</button>
+                <div id="w-response" class="response-box" style="display:none"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Lista depozite <button class="btn btn-ghost btn-sm" onclick="loadWarehouses()">↻ Refresh</button></div>
+                <div id="warehouses-list" class="items-list"><div class="empty-state">Se incarca...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FURNIZORI -->
+    <div id="section-suppliers" class="section">
+        <div class="section-header"><h2>🤝 Furnizori</h2><p>Gestioneaza furnizorii din sistem</p></div>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">+ Adauga furnizor nou</div>
+                <div class="form-group"><label>Nume *</label><input type="text" id="s-name" placeholder="ex: Samsung Romania"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="s-email" placeholder="ex: contact@samsung.ro"></div>
+                <div class="form-group"><label>Telefon</label><input type="text" id="s-phone" placeholder="ex: 0700 111 222"></div>
+                <div class="form-group"><label>Adresa</label><input type="text" id="s-address" placeholder="ex: Bucuresti, Sector 1"></div>
+                <button class="btn btn-green" onclick="createSupplier()">➕ Creaza furnizor</button>
+                <div id="s-response" class="response-box" style="display:none"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Lista furnizori <button class="btn btn-ghost btn-sm" onclick="loadSuppliers()">↻ Refresh</button></div>
+                <div id="suppliers-list" class="items-list"><div class="empty-state">Se incarca...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUSE -->
+    <div id="section-products" class="section">
+        <div class="section-header"><h2>📦 Produse</h2><p>Gestioneaza produsele din depozite</p></div>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">+ Adauga produs nou</div>
+                <div class="form-group"><label>Depozit *</label><select id="p-warehouse"><option value="">Selecteaza depozit...</option></select></div>
+                <div class="form-group"><label>Nume *</label><input type="text" id="p-name" placeholder="ex: iPhone 15"></div>
+                <div class="form-group"><label>SKU *</label><input type="text" id="p-sku" placeholder="ex: APL-IP15-BLK"></div>
+                <div class="form-group"><label>Pret (RON)</label><input type="number" id="p-price" placeholder="ex: 5000" min="0"></div>
+                <div class="form-group"><label>Stoc initial</label><input type="number" id="p-stock" placeholder="ex: 10" min="0"></div>
+                <div class="form-group"><label>Furnizor</label><select id="p-supplier"><option value="">Fara furnizor</option></select></div>
+                <button class="btn btn-green" onclick="createProduct()">➕ Adauga produs</button>
+                <div id="p-response" class="response-box" style="display:none"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Produse din depozit <button class="btn btn-ghost btn-sm" onclick="loadProducts()">↻</button></div>
+                <div class="form-group">
+                    <select id="p-filter-warehouse" onchange="loadProducts()" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:14px;outline:none">
+                        <option value="">Selecteaza depozit...</option>
+                    </select>
+                </div>
+                <div id="products-list" class="items-list"><div class="empty-state">Selecteaza un depozit</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STOCURI -->
+    <div id="section-inventory" class="section">
+        <div class="section-header"><h2>📊 Stocuri</h2><p>Gestioneaza miscarile de stoc</p></div>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">Miscare de stoc</div>
+                <div class="form-group"><label>Depozit *</label><select id="inv-warehouse" onchange="loadInventoryProducts()"><option value="">Selecteaza depozit...</option></select></div>
+                <div class="form-group"><label>Produs *</label><select id="inv-product"><option value="">Selecteaza produs...</option></select></div>
+                <div class="form-group"><label>Cantitate *</label><input type="number" id="inv-qty" placeholder="ex: 10" min="1"></div>
+                <div class="form-group"><label>Observatii</label><input type="text" id="inv-notes" placeholder="ex: marfa noua"></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn btn-green" onclick="doMovement('stock-in')">📥 Stock In</button>
+                    <button class="btn btn-red" onclick="doMovement('stock-out')">📤 Stock Out</button>
+                    <button class="btn btn-orange" onclick="doMovement('transfer')">🔄 Transfer</button>
+                </div>
+                <div id="inv-response" class="response-box" style="display:none"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Stoc curent <button class="btn btn-ghost btn-sm" onclick="loadInventory()">↻ Refresh</button></div>
+                <div class="form-group">
+                    <select id="inv-filter-warehouse" onchange="loadInventory()" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:14px;outline:none">
+                        <option value="">Selecteaza depozit...</option>
+                    </select>
+                </div>
+                <div id="inventory-list" class="items-list"><div class="empty-state">Selecteaza un depozit</div></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal stergere -->
+<div id="delete-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Confirma stergerea</span>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <p style="color:var(--text2);font-size:14px">Esti sigur ca vrei sa stergi? Actiunea nu poate fi anulata.</p>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal()">Anuleaza</button>
+            <button class="btn btn-red" onclick="confirmDelete()">Sterge</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000'
+let deleteCallback = null
+
+function showSection(name, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'))
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById('section-' + name).classList.add('active')
+    btn.classList.add('active')
+    if (name === 'dashboard') loadDashboard()
+    if (name === 'warehouses') loadWarehouses()
+    if (name === 'suppliers') loadSuppliers()
+    if (name === 'products') { populateWarehouseSelects(); populateSupplierSelect() }
+    if (name === 'inventory') populateInventorySelects()
+}
+
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast')
+    t.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg
+    t.className = 'toast show ' + type
+    setTimeout(() => t.className = 'toast', 3000)
+}
+
+function showResponse(id, data, ok) {
+    const el = document.getElementById(id)
+    el.style.display = 'block'
+    el.className = 'response-box ' + (ok ? 'success' : 'error')
+    el.textContent = JSON.stringify(data, null, 2)
+}
+
+async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } }
+    if (body) opts.body = JSON.stringify(body)
+    const res = await fetch(API + path, opts)
+    const data = await res.json()
+    return { ok: res.ok, data }
+}
+
+async function loadDashboard() {
+    const [w, s] = await Promise.all([api('GET', '/api/warehouses/'), api('GET', '/api/suppliers/')])
+    document.getElementById('stat-warehouses').textContent = w.ok ? w.data.length : '?'
+    document.getElementById('stat-suppliers').textContent = s.ok ? s.data.length : '?'
+    let total = 0
+    if (w.ok) for (const wh of w.data) { const p = await api('GET', `/api/warehouses/${wh.id}/products/`); if (p.ok) total += p.data.length }
+    document.getElementById('stat-products').textContent = total
+
+    const wEl = document.getElementById('dashboard-warehouses')
+    wEl.innerHTML = w.ok && w.data.length > 0 ? w.data.slice(0,5).map(wh => `<div class="item-row"><div class="item-info"><div class="item-name">${wh.name}</div><div class="item-sub">${wh.location || 'Locatie necunoscuta'}</div></div><span class="badge badge-blue">ID: ${wh.id}</span></div>`).join('') : '<div class="empty-state">Nu exista depozite</div>'
+
+    const sEl = document.getElementById('dashboard-suppliers')
+    sEl.innerHTML = s.ok && s.data.length > 0 ? s.data.slice(0,5).map(sup => `<div class="item-row"><div class="item-info"><div class="item-name">${sup.name}</div><div class="item-sub">${sup.contact_email || 'Fara email'}</div></div><span class="badge badge-green">ID: ${sup.id}</span></div>`).join('') : '<div class="empty-state">Nu exista furnizori</div>'
+}
+
+async function loadWarehouses() {
+    const { ok, data } = await api('GET', '/api/warehouses/')
+    const el = document.getElementById('warehouses-list')
+    if (!ok || data.length === 0) { el.innerHTML = '<div class="empty-state">Nu exista depozite</div>'; return }
+    el.innerHTML = data.map(w => `<div class="item-row"><div class="item-info"><div class="item-name">${w.name}</div><div class="item-sub">${w.location || '-'}</div></div><div class="item-actions"><span class="badge badge-blue">ID: ${w.id}</span><button class="btn btn-ghost btn-sm" onclick="deleteItem('/api/warehouses/${w.id}', loadWarehouses)">🗑</button></div></div>`).join('')
+}
+
+async function createWarehouse() {
+    const name = document.getElementById('w-name').value.trim()
+    if (!name) { showToast('Numele este obligatoriu!', 'error'); return }
+    const body = { name, location: document.getElementById('w-location').value || null, description: document.getElementById('w-desc').value || null }
+    const { ok, data } = await api('POST', '/api/warehouses/', body)
+    showResponse('w-response', data, ok)
+    if (ok) { showToast('Depozit creat!'); document.getElementById('w-name').value = ''; document.getElementById('w-location').value = ''; document.getElementById('w-desc').value = ''; loadWarehouses() }
+    else showToast('Eroare la creare!', 'error')
+}
+
+async function loadSuppliers() {
+    const { ok, data } = await api('GET', '/api/suppliers/')
+    const el = document.getElementById('suppliers-list')
+    if (!ok || data.length === 0) { el.innerHTML = '<div class="empty-state">Nu exista furnizori</div>'; return }
+    el.innerHTML = data.map(s => `<div class="item-row"><div class="item-info"><div class="item-name">${s.name}</div><div class="item-sub">${s.contact_email || '-'}</div></div><div class="item-actions"><span class="badge badge-green">ID: ${s.id}</span><button class="btn btn-ghost btn-sm" onclick="deleteItem('/api/suppliers/${s.id}', loadSuppliers)">🗑</button></div></div>`).join('')
+}
+
+async function createSupplier() {
+    const name = document.getElementById('s-name').value.trim()
+    if (!name) { showToast('Numele este obligatoriu!', 'error'); return }
+    const body = { name, contact_email: document.getElementById('s-email').value || null, phone: document.getElementById('s-phone').value || null, address: document.getElementById('s-address').value || null }
+    const { ok, data } = await api('POST', '/api/suppliers/', body)
+    showResponse('s-response', data, ok)
+    if (ok) { showToast('Furnizor creat!'); document.getElementById('s-name').value = ''; document.getElementById('s-email').value = ''; document.getElementById('s-phone').value = ''; document.getElementById('s-address').value = ''; loadSuppliers() }
+    else showToast('Eroare la creare!', 'error')
+}
+
+async function populateWarehouseSelects() {
+    const { ok, data } = await api('GET', '/api/warehouses/')
+    if (!ok) return
+    const opts = data.map(w => `<option value="${w.id}">${w.name}</option>`).join('')
+    document.getElementById('p-warehouse').innerHTML = '<option value="">Selecteaza depozit...</option>' + opts
+    document.getElementById('p-filter-warehouse').innerHTML = '<option value="">Selecteaza depozit...</option>' + opts
+}
+
+async function populateSupplierSelect() {
+    const { ok, data } = await api('GET', '/api/suppliers/')
+    if (!ok) return
+    document.getElementById('p-supplier').innerHTML = '<option value="">Fara furnizor</option>' + data.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+}
+
+async function loadProducts() {
+    const warehouseId = document.getElementById('p-filter-warehouse').value
+    if (!warehouseId) { document.getElementById('products-list').innerHTML = '<div class="empty-state">Selecteaza un depozit</div>'; return }
+    const { ok, data } = await api('GET', `/api/warehouses/${warehouseId}/products/`)
+    const el = document.getElementById('products-list')
+    if (!ok || data.length === 0) { el.innerHTML = '<div class="empty-state">Nu exista produse</div>'; return }
+    el.innerHTML = data.map(p => `<div class="item-row"><div class="item-info"><div class="item-name">${p.name}</div><div class="item-sub">SKU: ${p.sku} · ${p.price} RON</div></div><div class="item-actions"><span class="stock-badge">${p.stock_quantity} buc</span><button class="btn btn-ghost btn-sm" onclick="deleteItem('/api/warehouses/${warehouseId}/products/${p.id}', loadProducts)">🗑</button></div></div>`).join('')
+}
+
+async function createProduct() {
+    const warehouseId = document.getElementById('p-warehouse').value
+    const name = document.getElementById('p-name').value.trim()
+    const sku = document.getElementById('p-sku').value.trim()
+    if (!warehouseId) { showToast('Selecteaza un depozit!', 'error'); return }
+    if (!name) { showToast('Numele este obligatoriu!', 'error'); return }
+    if (!sku) { showToast('SKU-ul este obligatoriu!', 'error'); return }
+    const supplierId = document.getElementById('p-supplier').value
+    const body = { name, sku, price: parseFloat(document.getElementById('p-price').value) || 0, stock_quantity: parseInt(document.getElementById('p-stock').value) || 0, supplier_id: supplierId ? parseInt(supplierId) : null }
+    const { ok, data } = await api('POST', `/api/warehouses/${warehouseId}/products/`, body)
+    showResponse('p-response', data, ok)
+    if (ok) { showToast('Produs adaugat!'); document.getElementById('p-name').value = ''; document.getElementById('p-sku').value = ''; document.getElementById('p-price').value = ''; document.getElementById('p-stock').value = ''; loadProducts() }
+    else showToast('Eroare: ' + (data.detail || 'Eroare'), 'error')
+}
+
+async function populateInventorySelects() {
+    const { ok, data } = await api('GET', '/api/warehouses/')
+    if (!ok) return
+    const opts = data.map(w => `<option value="${w.id}">${w.name}</option>`).join('')
+    document.getElementById('inv-warehouse').innerHTML = '<option value="">Selecteaza depozit...</option>' + opts
+    document.getElementById('inv-filter-warehouse').innerHTML = '<option value="">Selecteaza depozit...</option>' + opts
+}
+
+async function loadInventoryProducts() {
+    const warehouseId = document.getElementById('inv-warehouse').value
+    if (!warehouseId) return
+    const { ok, data } = await api('GET', `/api/warehouses/${warehouseId}/products/`)
+    if (!ok) return
+    document.getElementById('inv-product').innerHTML = '<option value="">Selecteaza produs...</option>' + data.map(p => `<option value="${p.id}">${p.name} (stoc: ${p.stock_quantity})</option>`).join('')
+}
+
+async function loadInventory() {
+    const warehouseId = document.getElementById('inv-filter-warehouse').value
+    if (!warehouseId) { document.getElementById('inventory-list').innerHTML = '<div class="empty-state">Selecteaza un depozit</div>'; return }
+    const { ok, data } = await api('GET', `/api/warehouses/${warehouseId}/inventory/`)
+    const el = document.getElementById('inventory-list')
+    if (!ok || data.length === 0) { el.innerHTML = '<div class="empty-state">Nu exista produse</div>'; return }
+    el.innerHTML = data.map(p => `<div class="item-row"><div class="item-info"><div class="item-name">${p.name}</div><div class="item-sub">SKU: ${p.sku}</div></div><span class="stock-badge">${p.stock_quantity} buc</span></div>`).join('')
+}
+
+async function doMovement(type) {
+    const warehouseId = document.getElementById('inv-warehouse').value
+    const productId = document.getElementById('inv-product').value
+    const qty = parseInt(document.getElementById('inv-qty').value)
+    const notes = document.getElementById('inv-notes').value
+    if (!warehouseId) { showToast('Selecteaza un depozit!', 'error'); return }
+    if (!productId) { showToast('Selecteaza un produs!', 'error'); return }
+    if (!qty || qty <= 0) { showToast('Cantitatea trebuie sa fie mai mare ca 0!', 'error'); return }
+    const body = { movement_type: type.replace('-', '_'), quantity: qty, notes: notes || null }
+    const { ok, data } = await api('POST', `/api/warehouses/${warehouseId}/inventory/${productId}/${type}`, body)
+    showResponse('inv-response', data, ok)
+    if (ok) { showToast('Miscare efectuata!'); document.getElementById('inv-qty').value = ''; document.getElementById('inv-notes').value = ''; loadInventory(); loadInventoryProducts() }
+    else showToast('Eroare: ' + (data.detail || 'Eroare'), 'error')
+}
+
+function deleteItem(path, callback) {
+    deleteCallback = async () => { const { ok } = await api('DELETE', path); if (ok) { showToast('Sters cu succes!'); callback() } else showToast('Eroare la stergere!', 'error'); closeModal() }
+    document.getElementById('delete-modal').classList.add('open')
+}
+
+function confirmDelete() { if (deleteCallback) deleteCallback() }
+function closeModal() { document.getElementById('delete-modal').classList.remove('open'); deleteCallback = null }
+
+loadDashboard()
+</script>
+</body>
+</html>
